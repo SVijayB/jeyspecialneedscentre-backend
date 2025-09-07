@@ -6,6 +6,7 @@ Base settings shared across all environments.
 import os
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -17,6 +18,9 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
+
+# Environment setting
+DJANGO_ENVIRONMENT = config('DJANGO_ENVIRONMENT')
 
 # Application definition
 DJANGO_APPS = [
@@ -78,15 +82,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'jeycentre.wsgi.application'
 
-# Database configuration for MongoDB Atlas
+# Database configuration
+DATABASE_URL = config('DATABASE_URL')
 DATABASES = {
-    'default': {
-        'ENGINE': 'django_mongodb_backend',
-        'OPTIONS': {
-            'connection_string': config('MONGODB_URI'),
-            'database': config('MONGODB_NAME', default='jeycentre'),
-        }
-    }
+    'default': dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # Cache configuration (Simple local memory cache)

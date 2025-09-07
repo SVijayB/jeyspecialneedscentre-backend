@@ -16,8 +16,21 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import JsonResponse
+
+def root_view(request):
+    """Root endpoint"""
+    return JsonResponse({
+        'message': 'Jey Special Needs Centre API',
+        'version': '1.0.0',
+        'docs': '/api/info/',
+        'health': '/api/health/'
+    })
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('', root_view, name='root'),
+    path('admin/', admin.site.urls),
+    path('api/', include('core.urls')),
+    path('health/', include('health_check.urls')),  # Django health check
 ]
