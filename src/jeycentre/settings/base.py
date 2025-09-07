@@ -228,8 +228,8 @@ LOGGING = {
     },
 }
 
-# Custom User Model (TODO: Implement custom user model)
-# AUTH_USER_MODEL = 'accounts.User'
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Session configuration
 SESSION_COOKIE_AGE = 86400  # 24 hours
