@@ -12,6 +12,7 @@ from django.utils import timezone
 from datetime import datetime, date
 import json
 from ..models import LeaveApplication
+from core.services import LeaveQueryService
 
 User = get_user_model()
 
@@ -120,60 +121,20 @@ def get_leave_applications(request):
     Get leave applications based on user role
     """
     try:
-        user = request.user
+        filters = {
+            'status': request.GET.get('status'),
+            'employee_id': request.GET.get('employee_id')
+        }
         
-        # Get query parameters
-        status_filter = request.GET.get('status')
-        employee_id = request.GET.get('employee_id')
+        result = LeaveQueryService.get_leave_applications_optimized(
+            user=request.user,
+            filters=filters
+        )
         
-        # Base queryset based on user role
-        if user.role == 'therapist':
-            queryset = LeaveApplication.objects.filter(employee=user)
-        elif user.role == 'supervisor':
-            queryset = LeaveApplication.objects.filter(employee__branch=user.branch)
-        elif user.role in ['hr', 'superadmin']:
-            queryset = LeaveApplication.objects.all()
-        else:
-            return Response({
-                'error': 'Unauthorized'
-            }, status=status.HTTP_403_FORBIDDEN)
+        if 'error' in result:
+            return Response(result, status=status.HTTP_403_FORBIDDEN)
         
-        # Apply filters
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
-        if employee_id:
-            queryset = queryset.filter(employee__employee_id=employee_id)
-        
-        leave_applications = queryset.select_related('employee', 'employee__branch', 'approved_by').order_by('-applied_at')
-        
-        applications_data = []
-        for app in leave_applications:
-            applications_data.append({
-                'id': app.id,
-                'employee': {
-                    'id': app.employee.id,
-                    'employee_id': app.employee.employee_id,
-                    'name': f"{app.employee.first_name} {app.employee.last_name}",
-                    'branch': app.employee.branch.name if app.employee.branch else None,
-                },
-                'leave_type': app.leave_type,
-                'start_date': app.start_date.isoformat(),
-                'end_date': app.end_date.isoformat(),
-                'reason': app.reason,
-                'status': app.status,
-                'leave_days': app.leave_days,
-                'applied_at': app.applied_at.isoformat(),
-                'approved_by': {
-                    'name': f"{app.approved_by.first_name} {app.approved_by.last_name}",
-                    'employee_id': app.approved_by.employee_id
-                } if app.approved_by else None,
-                'approved_at': app.approved_at.isoformat() if app.approved_at else None,
-            })
-        
-        return Response({
-            'leave_applications': applications_data,
-            'count': len(applications_data)
-        }, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({

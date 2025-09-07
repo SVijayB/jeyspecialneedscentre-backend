@@ -14,6 +14,7 @@ from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 import json
 from ..models import AttendanceLog
+from core.services import AttendanceQueryService
 
 User = get_user_model()
 
@@ -91,82 +92,41 @@ def get_attendance(request):
     Get attendance records based on user role and filters
     """
     try:
-        user = request.user
+        filters = {}
         
-        # Get query parameters
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-        employee_id = request.GET.get('employee_id')
-        branch_id = request.GET.get('branch_id')
-        status_filter = request.GET.get('status')
-        
-        # Base queryset based on user role
-        if user.role == 'therapist':
-            queryset = AttendanceLog.objects.filter(employee=user)
-        elif user.role == 'supervisor':
-            queryset = AttendanceLog.objects.filter(employee__branch=user.branch)
-        elif user.role in ['hr', 'superadmin']:
-            queryset = AttendanceLog.objects.all()
-        else:
-            return Response({
-                'error': 'Insufficient permissions'
-            }, status=status.HTTP_403_FORBIDDEN)
-        
-        # Apply filters
-        if start_date:
+        if request.GET.get('start_date'):
             try:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(date__gte=start_date)
+                filters['start_date'] = datetime.strptime(
+                    request.GET.get('start_date'), '%Y-%m-%d'
+                ).date()
             except ValueError:
                 return Response({
                     'error': 'Invalid start_date format. Use YYYY-MM-DD'
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        if end_date:
+        if request.GET.get('end_date'):
             try:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                queryset = queryset.filter(date__lte=end_date)
+                filters['end_date'] = datetime.strptime(
+                    request.GET.get('end_date'), '%Y-%m-%d'
+                ).date()
             except ValueError:
                 return Response({
                     'error': 'Invalid end_date format. Use YYYY-MM-DD'
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        if employee_id and user.role in ['supervisor', 'hr', 'superadmin']:
-            queryset = queryset.filter(employee__employee_id=employee_id)
+        filters['employee_id'] = request.GET.get('employee_id')
+        filters['branch_id'] = request.GET.get('branch_id')
+        filters['status'] = request.GET.get('status')
         
-        if branch_id and user.role in ['hr', 'superadmin']:
-            queryset = queryset.filter(employee__branch_id=branch_id)
+        result = AttendanceQueryService.get_attendance_optimized(
+            user=request.user,
+            filters=filters
+        )
         
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
+        if 'error' in result:
+            return Response(result, status=status.HTTP_403_FORBIDDEN)
         
-        # Order by date (latest first)
-        queryset = queryset.order_by('-date')
-        
-        # Serialize data
-        attendance_data = []
-        for log in queryset:
-            attendance_data.append({
-                'id': log.id,
-                'employee': {
-                    'id': log.employee.id,
-                    'name': f"{log.employee.first_name} {log.employee.last_name}",
-                    'employee_id': log.employee.employee_id,
-                    'branch': log.employee.branch.name if log.employee.branch else None,
-                },
-                'date': log.date.isoformat(),
-                'check_in_time': log.check_in_time.isoformat() if log.check_in_time else None,
-                'check_out_time': log.check_out_time.isoformat() if log.check_out_time else None,
-                'status': log.status,
-                'checkin_status': log.checkin_status,
-                'total_hours': str(log.total_hours),
-                'needs_checkout_correction': log.needs_checkout_correction,
-            })
-        
-        return Response({
-            'attendance_records': attendance_data,
-            'total_records': len(attendance_data)
-        }, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({
