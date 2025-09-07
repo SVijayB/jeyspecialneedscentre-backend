@@ -53,36 +53,52 @@ This repository contains the backend code for their management system, built usi
 
 ## Installation
 
-<!--- Provide instructions on installing the application --->
+### Prerequisites
+- Python 3.11+ 
+- MongoDB Atlas account (free tier available)
+- Git
 
-For the latest stable version, head to [Releases](https://github.com/SVijayB/jeyspecialneedscentre-backend/releases).
+### Setup
 
-Download and extract the source code.
-
-As an alternative, you could also clone the repository using,
-
-<pre>
+1. **Clone the repository**
+```bash
 git clone https://github.com/SVijayB/jeyspecialneedscentre-backend
-</pre>
+cd jeyspecialneedscentre-backend
+```
 
-Once you have the source code, create a virtual environment using the following command,
-`python3 -m venv venv`
+2. **Create and activate virtual environment**
+```bash
+python -m venv .venv
 
-Enter the virtual environment and install dependancies using `pip install -r requirements.txt`.
+source .venv/bin/activate
+```
 
-## Usage
+3. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
 
-<!--- Provide instructions on how to use the application after installing it --->
+4. **Environment Configuration**
+```bash
+# Copy the example environment file
+cp .env.example .env
 
-To launch the file, use the following command, `python3 app.py`.
+# Edit .env with your MongoDB Atlas URI and other settings
+# See .env.example for all required variables
+```
 
-<!--- You can also add in screenshots, app demo (Gif format) or even provide link to other resources --->
+5. **Run migrations (if any)**
+```bash
+cd src
+python manage.py migrate
+```
 
-### Project demo
+6. **Start the development server**
+```bash
+python manage.py runserver
+```
 
-![Project demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMTJlODMxMDg0ZWJjOGFmNTdjYzczZTMwZTIyNzM3YTExZWMxMzM2OCZjdD1n/wwg1suUiTbCY8H8vIA/giphy-downsized-large.gif)
-
-You can also find the demo video [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ).
+The API will be available at `http://localhost:8000`
 
 ## Contributing
 
