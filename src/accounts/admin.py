@@ -10,34 +10,47 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ['username', 'employee_id', 'first_name', 'last_name', 'email']
     ordering = ['username']
     
-    # Fields to display in the detail view
-    fieldsets = UserAdmin.fieldsets + (
+    # Simplified fieldsets without permission management
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('username', 'password', 'first_name', 'last_name', 'email')
+        }),
         ('Employee Information', {
             'fields': ('employee_id', 'role', 'mobile_number', 'branch', 'supervisor')
         }),
         ('Work Schedule', {
             'fields': ('login_time', 'grace_time')
         }),
+        ('Account Status', {
+            'fields': ('is_active', 'is_staff', 'is_verified')
+        }),
         ('Verification', {
-            'fields': ('is_verified', 'verification_token')
+            'fields': ('verification_token',),
+            'classes': ('collapse',)
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('date_joined', 'last_login', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
     
     # Fields to display when adding a new user
-    add_fieldsets = UserAdmin.add_fieldsets + (
+    add_fieldsets = (
+        ('Basic Information', {
+            'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'email')
+        }),
         ('Employee Information', {
             'fields': ('employee_id', 'role', 'mobile_number', 'branch', 'supervisor')
         }),
         ('Work Schedule', {
             'fields': ('login_time', 'grace_time')
         }),
+        ('Account Status', {
+            'fields': ('is_active', 'is_staff')
+        }),
     )
     
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['date_joined', 'last_login', 'created_at', 'updated_at']
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

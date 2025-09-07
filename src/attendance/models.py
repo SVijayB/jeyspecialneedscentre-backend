@@ -57,7 +57,6 @@ class AttendanceLog(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ['employee', 'date']
         verbose_name = "Attendance Log"
         verbose_name_plural = "Attendance Logs"
         ordering = ['-date', 'employee']

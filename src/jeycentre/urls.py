@@ -31,6 +31,12 @@ def root_view(request):
 urlpatterns = [
     path('', root_view, name='root'),
     path('admin/', admin.site.urls),
+    
+    # API endpoints
     path('api/', include('core.urls')),
+    path('api/auth/', include('accounts.urls')),
+    path('api/attendance/', include('attendance.urls')),
+    
+    # Health checks
     path('health/', include('health_check.urls')),  # Django health check
 ]
