@@ -22,9 +22,15 @@ class Branch(models.Model):
     @property
     def active_users_count(self):
         """Return count of active users in this branch"""
+        # This property is now optimized in admin but kept for compatibility
+        if hasattr(self, 'total_users'):
+            return self.total_users
         return self.users.count()
     
     @property
     def therapists_count(self):
         """Return count of therapists in this branch"""
+        # This property is now optimized in admin but kept for compatibility
+        if hasattr(self, 'total_therapists'):
+            return self.total_therapists
         return self.users.filter(role='therapist').count()

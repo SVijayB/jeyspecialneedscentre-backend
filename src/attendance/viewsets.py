@@ -35,7 +35,7 @@ class AttendanceLogViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated, BranchBasedPermission]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'checkin_status', 'date', 'employee__branch']
+    filterset_fields = ['employee', 'status', 'checkin_status', 'date', 'employee__branch']
     search_fields = ['employee__employee_id', 'employee__first_name', 'employee__last_name']
     ordering_fields = ['date', 'check_in_time', 'check_out_time']
     ordering = ['-date', 'employee__employee_id']
@@ -140,7 +140,7 @@ class LeaveApplicationViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'leave_type', 'employee__branch']
+    filterset_fields = ['status', 'leave_type', 'employee', 'employee__branch']
     search_fields = ['employee__employee_id', 'employee__first_name', 'employee__last_name', 'reason']
     ordering_fields = ['applied_at', 'start_date', 'end_date']
     ordering = ['-applied_at']
