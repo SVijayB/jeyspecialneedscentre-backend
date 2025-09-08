@@ -34,11 +34,10 @@ class BranchViewSet(viewsets.ModelViewSet):
     Complete CRUD operations for branches
     Only superadmin can create/update/delete
     """
-    queryset = Branch.objects.filter(is_active=True)
+    queryset = Branch.objects.all()
     serializer_class = BranchSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['is_active']
     search_fields = ['name']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
@@ -53,27 +52,6 @@ class BranchViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
         
         return [permission() for permission in permission_classes]
-    
-    def destroy(self, request, *args, **kwargs):
-        """Soft delete branch instead of hard delete"""
-        instance = self.get_object()
-        instance.is_active = False
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
-        """Restore a soft-deleted branch"""
-        if request.user.role != 'superadmin':
-            return Response(
-                {'error': 'Only superadmin can restore branches'}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        branch = self.get_object()
-        branch.is_active = True
-        branch.save()
-        return Response({'message': 'Branch restored successfully'})
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -83,7 +61,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['role', 'branch', 'is_active', 'is_verified']
+    filterset_fields = ['role', 'branch', 'is_verified']
     search_fields = ['employee_id', 'username', 'first_name', 'last_name', 'email']
     ordering_fields = ['employee_id', 'first_name', 'last_name', 'created_at']
     ordering = ['employee_id']
@@ -99,10 +77,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 branch=user.branch
             )
         else:
-            # Therapists and supervisors can only see themselves
-            return User.objects.select_related('branch', 'supervisor').filter(
-                id=user.id
-            )
+            # Supervisors and therapists can only see themselves
+            return User.objects.filter(id=user.id)
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action"""
@@ -125,35 +101,13 @@ class UserViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
     
     def perform_create(self, serializer):
-        """Handle user creation with branch assignment"""
+        """Create user with proper branch assignment for HR users"""
         user = self.request.user
-        
-        # HR can only create users in their own branch
         if user.role == 'hr':
+            # HR can only create users in their own branch
             serializer.save(branch=user.branch)
         else:
             serializer.save()
-    
-    def destroy(self, request, *args, **kwargs):
-        """Soft delete user instead of hard delete"""
-        instance = self.get_object()
-        instance.is_active = False
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
-        """Restore a soft-deleted user"""
-        if request.user.role not in ['superadmin', 'hr']:
-            return Response(
-                {'error': 'Only superadmin or HR can restore users'}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        user = self.get_object()
-        user.is_active = True
-        user.save()
-        return Response({'message': 'User restored successfully'})
     
     @action(detail=True, methods=['post'])
     def reset_password(self, request, pk=None):
@@ -180,21 +134,18 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def me(self, request):
-        """Get current user's profile"""
-        serializer = UserDetailSerializer(request.user)
+        """Get current user profile"""
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)
     
     @action(detail=False, methods=['put', 'patch'])
     def update_profile(self, request):
-        """Update current user's profile"""
-        serializer = UserDetailSerializer(
+        """Update current user profile"""
+        serializer = self.get_serializer(
             request.user, 
             data=request.data, 
             partial=request.method == 'PATCH'
         )
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

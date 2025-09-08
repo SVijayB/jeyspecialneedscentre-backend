@@ -86,7 +86,6 @@ class CustomUser(AbstractUser):
             models.Index(fields=['branch', 'role']),     # Role-based queries
             models.Index(fields=['employee_id']),        # Employee lookups
             models.Index(fields=['role']),               # Role filtering
-            models.Index(fields=['is_active']),          # Active user queries
         ]
     
     def __str__(self):
@@ -97,8 +96,7 @@ class CustomUser(AbstractUser):
         if self.role == 'therapist' and not self.supervisor:
             branch_supervisor = CustomUser.objects.filter(
                 role='supervisor', 
-                branch=self.branch,
-                is_active=True
+                branch=self.branch
             ).first()
             if branch_supervisor:
                 self.supervisor = branch_supervisor

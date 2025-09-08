@@ -188,7 +188,7 @@ class AttendanceAnalyticsService:
         """
         
         # Single query with annotations to get all branch stats at once
-        branch_stats = Branch.objects.filter(is_active=True).annotate(
+        branch_stats = Branch.objects.annotate(
             # Count total employees per branch
             total_employees=Count(
                 'users', 

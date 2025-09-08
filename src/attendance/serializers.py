@@ -42,7 +42,7 @@ class AttendanceCreateSerializer(serializers.ModelSerializer):
     def validate_employee_id(self, value):
         """Validate employee exists"""
         try:
-            employee = User.objects.get(employee_id=value, is_active=True)
+            employee = User.objects.get(employee_id=value)
             return employee
         except User.DoesNotExist:
             raise serializers.ValidationError("Employee not found")

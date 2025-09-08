@@ -3,14 +3,14 @@ from .models import Branch
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'active_users_count', 'therapists_count', 'created_at']
-    list_filter = ['is_active', 'created_at']
+    list_display = ['name', 'active_users_count', 'therapists_count', 'created_at']
+    list_filter = ['created_at']
     search_fields = ['name']
     readonly_fields = ['active_users_count', 'therapists_count', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Branch Information', {
-            'fields': ('name', 'is_active')
+            'fields': ('name',)
         }),
         ('Statistics', {
             'fields': ('active_users_count', 'therapists_count'),

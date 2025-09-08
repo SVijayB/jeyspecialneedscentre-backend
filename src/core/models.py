@@ -10,7 +10,6 @@ class Branch(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
     
     class Meta:
         verbose_name = "Branch"
@@ -23,9 +22,9 @@ class Branch(models.Model):
     @property
     def active_users_count(self):
         """Return count of active users in this branch"""
-        return self.users.filter(is_active=True).count()
+        return self.users.count()
     
     @property
     def therapists_count(self):
         """Return count of therapists in this branch"""
-        return self.users.filter(role='therapist', is_active=True).count()
+        return self.users.filter(role='therapist').count()
