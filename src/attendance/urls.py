@@ -9,7 +9,7 @@ urlpatterns = [
     path('qr/scan/', views.scan_qr_code, name='scan_qr_code'),
     
     # Attendance Management
-    path('checkout/', views.checkout_button, name='checkout_button'),
+    path('checkout/button/', views.checkout_button, name='checkout_button'),
     path('attendance/', views.get_attendance, name='get_attendance'),
     path('attendance/today/', views.get_today_attendance, name='get_today_attendance'),
     
@@ -19,7 +19,7 @@ urlpatterns = [
     path('leave/update/<int:leave_id>/', views.update_leave_status, name='update_leave_status'),
     
     # Checkout Correction Requests
-    path('checkout/request/', views.request_checkout_correction, name='request_checkout_correction'),
-    path('checkout/requests/', views.get_checkout_requests, name='get_checkout_requests'),
-    path('checkout/update/<int:request_id>/', views.update_checkout_request, name='update_checkout_request'),
+    path('checkout/correction/request/', views.request_checkout_correction, name='request_checkout_correction'),
+    path('checkout/correction/requests/', views.get_checkout_requests, name='get_checkout_requests'),
+    path('checkout/correction/update/<int:request_id>/', views.update_checkout_request, name='update_checkout_request'),
 ]

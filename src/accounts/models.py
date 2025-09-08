@@ -82,6 +82,12 @@ class CustomUser(AbstractUser):
         verbose_name = "User"
         verbose_name_plural = "Users"
         ordering = ['branch', 'role', 'employee_id']
+        indexes = [
+            models.Index(fields=['branch', 'role']),     # Role-based queries
+            models.Index(fields=['employee_id']),        # Employee lookups
+            models.Index(fields=['role']),               # Role filtering
+            models.Index(fields=['is_active']),          # Active user queries
+        ]
     
     def __str__(self):
         return f"{self.employee_id} - {self.get_full_name()} ({self.get_role_display()})"

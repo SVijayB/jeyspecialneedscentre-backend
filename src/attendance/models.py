@@ -60,6 +60,12 @@ class AttendanceLog(models.Model):
         verbose_name = "Attendance Log"
         verbose_name_plural = "Attendance Logs"
         ordering = ['-date', 'employee']
+        indexes = [
+            models.Index(fields=['employee', 'date']),  # Most common query pattern
+            models.Index(fields=['date']),              # Dashboard queries
+            models.Index(fields=['status']),            # Status filtering
+            models.Index(fields=['employee', '-date']), # Employee history
+        ]
     
     def __str__(self):
         return f"{self.employee.employee_id} - {self.date} ({self.status})"
