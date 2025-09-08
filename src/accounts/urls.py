@@ -1,18 +1,20 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+from .viewsets import UserViewSet, BranchViewSet
 
 app_name = 'accounts'
 
+# DRF Router for ViewSets
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'branches', BranchViewSet, basename='branch')
+
 urlpatterns = [
-    # Authentication
+    # DRF ViewSet routes
+    path('', include(router.urls)),
+    
+    # Authentication endpoints
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
-    
-    # User Profile
-    path('profile/', views.profile, name='profile'),
-    path('profile/update/', views.update_profile, name='update_profile'),
-    
-    # User Management
-    path('users/', views.get_users, name='get_users'),
-    path('branches/', views.get_branches, name='get_branches'),
 ]

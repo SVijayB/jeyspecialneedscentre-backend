@@ -18,14 +18,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 def root_view(request):
     """Root endpoint"""
     return JsonResponse({
         'message': 'Jey Special Needs Centre API',
         'version': '1.0.0',
-        'docs': '/api/info/',
-        'health': '/api/health/'
+        'docs': '/api/docs/',
+        'schema': '/api/schema/',
+        'health': '/health/'
     })
 
 urlpatterns = [
@@ -36,6 +38,10 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path('api/auth/', include('accounts.urls')),
     path('api/attendance/', include('attendance.urls')),
+    
+    # API Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     
     # Health checks
     path('health/', include('health_check.urls')),  # Django health check
