@@ -23,6 +23,7 @@ class IntegrationTestRunner:
             'leave': 'leave_tests',
             'qr': 'qr_tests'
         }
+        self.test_runners = {}  # Store test runners to access their created resources
         
         # Define execution order (dependencies)
         self.execution_order = ['auth', 'branch', 'user', 'attendance', 'leave', 'qr']
@@ -49,6 +50,9 @@ class IntegrationTestRunner:
             
             # Run all tests in the module
             results = test_runner.run_all_tests()
+            
+            # Store the test runner for cleanup later
+            self.test_runners[module_name] = test_runner
             
             # Update overall results
             self.overall_results.total_tests += results['total']
@@ -187,14 +191,29 @@ class IntegrationTestRunner:
                 for module_name in cleanup_order:
                     try:
                         print(f"Cleaning up {module_name} resources...")
-                        module = importlib.import_module(self.test_modules[module_name])
-                        test_class_name = f"{module_name.capitalize()}IntegrationTests"
-                        test_class = getattr(module, test_class_name)
-                        test_runner = test_class()
                         
-                        # Initialize with admin session
-                        test_runner.session = self.base_test.session
-                        test_runner.token = self.base_test.token
+                        # Use the stored test runner if available
+                        if module_name in self.test_runners:
+                            test_runner = self.test_runners[module_name]
+                            # Update session info in case it changed
+                            test_runner.session = self.base_test.session
+                            test_runner.token = self.base_test.token
+                        else:
+                            # Fallback to creating new instance
+                            module = importlib.import_module(self.test_modules[module_name])
+                            
+                            # Special case for QR tests
+                            if module_name == 'qr':
+                                test_class_name = "QRIntegrationTests"
+                            else:
+                                test_class_name = f"{module_name.capitalize()}IntegrationTests"
+                            
+                            test_class = getattr(module, test_class_name)
+                            test_runner = test_class()
+                            
+                            # Initialize with admin session
+                            test_runner.session = self.base_test.session
+                            test_runner.token = self.base_test.token
                         
                         test_runner.cleanup()
                         

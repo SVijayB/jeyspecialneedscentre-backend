@@ -53,7 +53,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                           # Run all tests
+  %(prog)s                           # Show help and available options
+  %(prog)s --tests all               # Run all tests with cleanup
   %(prog)s --tests auth,user         # Run auth and user tests only
   %(prog)s --tests branch --cleanup  # Run branch tests with forced cleanup
   %(prog)s --list                    # Show available test modules
@@ -77,7 +78,7 @@ Integration Test Features:
         '--tests', 
         type=str, 
         metavar='MODULE1,MODULE2',
-        help='Comma-separated list of test modules to run (e.g., auth,user,branch)'
+        help='Comma-separated list of test modules to run. Use "all" to run all tests (e.g., auth,user,branch or all)'
     )
     
     parser.add_argument(
@@ -106,6 +107,18 @@ Integration Test Features:
     
     args = parser.parse_args()
     
+    # Show help if no arguments provided
+    if len(sys.argv) == 1:
+        parser.print_help()
+        print("\n" + "="*60)
+        print("QUICK START:")
+        print("="*60)
+        print("  python run_tests.py --tests all      # Run all tests with cleanup")
+        print("  python run_tests.py --tests auth     # Run only auth tests")
+        print("  python run_tests.py --list           # Show available modules")
+        print("="*60)
+        return 0
+    
     # Handle special flags
     if args.list:
         list_modules()
@@ -123,24 +136,32 @@ Integration Test Features:
     # Parse selected modules
     selected_modules = None
     if args.tests:
-        selected_modules = [m.strip() for m in args.tests.split(',')]
-        
-        # Validate module names
-        valid_modules = ['auth', 'branch', 'user', 'attendance', 'leave', 'qr']
-        invalid_modules = [m for m in selected_modules if m not in valid_modules]
-        
-        if invalid_modules:
-            print(f"ERROR: Invalid test modules: {invalid_modules}")
-            print(f"Valid modules: {', '.join(valid_modules)}")
-            print("Use --list to see all available modules")
-            return 1
+        if args.tests.lower() == 'all':
+            # Run all tests with cleanup by default
+            selected_modules = None  # None means all modules
+        else:
+            selected_modules = [m.strip() for m in args.tests.split(',')]
+            
+            # Validate module names
+            valid_modules = ['auth', 'branch', 'user', 'attendance', 'leave', 'qr']
+            invalid_modules = [m for m in selected_modules if m not in valid_modules]
+            
+            if invalid_modules:
+                print(f"ERROR: Invalid test modules: {invalid_modules}")
+                print(f"Valid modules: {', '.join(valid_modules)}")
+                print("Use --list to see all available modules or --tests all to run everything")
+                return 1
     
     # Show execution plan
     modules_to_run = selected_modules if selected_modules else ['auth', 'branch', 'user', 'attendance', 'leave', 'qr']
     cleanup_enabled = not args.no_cleanup
     
+    # Auto-enable cleanup for "all" tests unless explicitly disabled
+    if args.tests and args.tests.lower() == 'all' and not args.no_cleanup:
+        cleanup_enabled = True
+    
     print("Integration Test Execution Plan:")
-    print(f"  Modules: {', '.join(modules_to_run)}")
+    print(f"  Modules: {', '.join(modules_to_run) if modules_to_run else 'all'}")
     print(f"  Cleanup: {'Enabled' if cleanup_enabled else 'Disabled'}")
     print(f"  Server:  http://localhost:8000")
     print("")
