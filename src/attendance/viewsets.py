@@ -85,17 +85,28 @@ class AttendanceLogViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def today(self, request):
-        """Get today's attendance for current user"""
+        """Get today's attendance for current user (latest record if multiple exist)"""
         today = timezone.now().date()
         
         try:
-            attendance = self.get_queryset().get(employee=request.user, date=today)
-            serializer = self.get_serializer(attendance)
-            return Response(serializer.data)
-        except AttendanceLog.DoesNotExist:
+            # Get the latest attendance record for today (in case of multiple records)
+            attendance = self.get_queryset().filter(
+                employee=request.user, 
+                date=today
+            ).order_by('-created_at').first()
+            
+            if attendance:
+                serializer = self.get_serializer(attendance)
+                return Response(serializer.data)
+            else:
+                return Response(
+                    {'message': 'No attendance record for today'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
             return Response(
-                {'message': 'No attendance record for today'}, 
-                status=status.HTTP_404_NOT_FOUND
+                {'error': f'Error retrieving attendance: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
     @action(detail=False, methods=['post'])
@@ -129,7 +140,7 @@ class AttendanceLogViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(attendance_log)
         return Response({
-            'message': f'Successfully checked out at {current_time.strftime("%H:%M")}',
+            'message': 'Checked out successful!',
             'attendance': serializer.data
         })
 

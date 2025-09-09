@@ -185,7 +185,7 @@ def scan_qr_code(request):
         attendance_log.save()  # Save the updated attendance log
         
         return Response({
-            'message': f'Successfully checked in at {current_time.strftime("%H:%M")}',
+            'message': 'Checked in successful!',
             'attendance': {
                 'id': attendance_log.id,
                 'date': attendance_log.date.isoformat(),
